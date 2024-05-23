@@ -58,7 +58,7 @@ jobs:
           fi
           RELEASE_VERSION="${TAG//v}"
           IFS='-' read -r BASE_VERSION PRERELEASE <<< "${RELEASE_VERSION}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${BASE_VERSION}"
           echo "MAJOR=${MAJOR}" | tee -a "$GITHUB_OUTPUT"
           echo "MINOR=${MINOR}" | tee -a "$GITHUB_OUTPUT"
           echo "PATCH=${PATCH}" | tee -a "$GITHUB_OUTPUT"
