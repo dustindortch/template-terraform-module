@@ -51,7 +51,7 @@ jobs:
       - id: get-version
         name: Get Version
         run: |
-          TAG=$(git describe --tags ${{ github.sha }})
+          TAG=$(git describe --tags ${{ github.sha }} 2>/dev/null || echo "")
           TAG_COUNT=$(echo $TAG | wc -w)
           if [ "$TAG_COUNT" -eq 0 ] ; then
             RELEASE_VERSION=$INITIAL_VERSION
