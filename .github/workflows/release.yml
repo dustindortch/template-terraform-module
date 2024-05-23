@@ -44,7 +44,7 @@ jobs:
           LABEL_COUNT=$(echo $LABELS | wc -w)
           if [ "$LABEL_COUNT" -eq "1" ]; then
             echo "Found: $LABELS"
-            echo "RELEASE_TYPE=$LABELS" | tee -a $GITHUB_ENV
+            echo "RELEASE_TYPE=$LABELS" | tee -a $GITHUB_OUTPUT
           elif [ "$LABEL_COUNT" -gt "1"] ; then
             echo "::error::Too many release type labels: $(echo $LABELS | tr '\n' ' ')"
             exit 1
@@ -91,7 +91,7 @@ jobs:
         name: Rev PRELEASE
         env:
           PRE_RELEASE: ${{ steps.check-labels.outputs.name }}
-        if: ${{ contains(fromJSON('["rc", "beta", "alpha"]'),steps.check-labels.outputs.RELEASE_TYPE) }}
+        if: ${{ contains(fromJSON('["rc", "beta", "alpha"]'), steps.check-labels.outputs.RELEASE_TYPE) }}
         run: |
           if [ "${PRE_RELEASE}" == "rc" ]; then
             echo "PRERELEASE=rc$((${RC}+1))" | tee -a $GITHUB_ENV
@@ -108,6 +108,8 @@ jobs:
       - id: create-tag
         name: Create Tag
         run: |
+          git config user.email ${{ github.actor }}@${{ github.event.repository.name}}.git
+          git config user.name "GitHub Releaser"
           git tag -a "$VERSION" ${{ github.sha }} -m "Release $VERSION"
           git push origin "$VERSION"
 
