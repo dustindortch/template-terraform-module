@@ -7,7 +7,7 @@ This repository is a template for creating a new Terraform module.
 Clone as a new repository (using the GitHub CLI):
 
 ```bash
-name="lz" # Example for naming as 'terraform-aws-s3-bucket'
+name="lz" # Example for naming as 'terraform-aws-lz'
 PUBLIC_REPO=true
 TERRAFORM_MODULE_PROVIDER="aws"
 TERRAFORM_MODULE_NAME="terraform-${TERRAFORM_MODULE_PROVIDER}-${name}"
