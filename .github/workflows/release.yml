@@ -28,6 +28,10 @@ jobs:
       INITIAL_VERSION: 'v0.1.0'
     runs-on: ubuntu-latest
     steps:
+      - id: checkout
+        name: Checkout code
+        uses: actions/checkout@v2
+
       - id: check-labels
         name: Check labels
         run: |
