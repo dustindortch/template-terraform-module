@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: checkout
-        name: Checkout code
-        uses: actions/checkout@v2
+        name: Checkout
+        uses: actions/checkout@v4
 
       - id: check-labels
         name: Check labels
