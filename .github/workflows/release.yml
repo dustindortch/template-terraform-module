@@ -96,9 +96,19 @@ jobs:
             echo "PRERELEASE=${PRE_RELEASE}${DATE}" | tee -a "$GITHUB_OUTPUT"
           fi
 
+      - id: build-version
+        name: Build Version
+        run: |
+          echo "VERSION=v${MAJOR}.${MINOR}.${PATCH}`[ -n "${PRERELEASE}" ] && echo "-${PRERELEASE}"`" | tee -a "$GITHUB_OUTPUT"
+
+      - id: create-tag
+        name: Create Tag
+        run: |
+          git tag -a "$VERSION" ${{ github.sha }} -m "Release $VERSION"
+          git push origin "$VERSION"
+
       - id: create-release
         name: Create Release
         run: |
-          VERSION=$(echo "v${MAJOR}.${MINOR}.${PATCH}`[ -n "${PRERELEASE}" ] && echo "-${PRERELEASE}"`")
-          gh release create "$VERSION" --title "Release $VERSION" --notes "Release $VERSION" --target ${{ github.sha }}
+          gh release create "$VERSION" --title "Release $VERSION" --notes "Release $VERSION" --target ${{ github.sha }} $([ -n "${PRERELEASE}" ] && echo "--prerelease")
 ...
