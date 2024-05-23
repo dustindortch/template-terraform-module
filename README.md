@@ -7,18 +7,17 @@ This repository is a template for creating a new Terraform module.
 Clone as a new repository (using the GitHub CLI):
 
 ```bash
-name="s3-bucket" # Example for naming as 'terraform-aws-s3-bucket'
-PUBLIC_REPO="true
+name="lz" # Example for naming as 'terraform-aws-s3-bucket'
+PUBLIC_REPO=true
 TERRAFORM_MODULE_PROVIDER="aws"
 TERRAFORM_MODULE_NAME="terraform-${TERRAFORM_MODULE_PROVIDER}-${name}"
 TEMPLATE_REPOSITORY="dustindortch/template-terraform-module"
 
-if [ "${PWD##*/}" != "${TERRAFORM_MODULE_NAME}" ]; then
-  mkdir -p "${TERRAFORM_MODULE_NAME}"
-  cd "${TERRAFORM_MODULE_NAME}"
+if [ "${PWD##*/}" == "${TERRAFORM_MODULE_NAME}" ]; then
+  cd ..
 fi
 
-gh create repo $TERRAFORM_MODULE_NAME $(("${PUBLIC_REPO}" == "true" ? "--public" : "--private")) --template="${TEMPLATE_REPOSITORY}" --clone
+gh repo create "${TERRAFORM_MODULE_NAME}" `[ "${PUBLIC_REPO}" == true ] && echo "--public" || echo "--private"` --template "${TEMPLATE_REPOSITORY}" --clone
 ```
 
 Modify the name within this README.md file to match the name of the module you are creating (e.g. `terraform-aws-s3-bucket`).
