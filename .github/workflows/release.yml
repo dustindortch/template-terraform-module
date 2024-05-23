@@ -55,7 +55,7 @@ jobs:
           TAG=$(git describe --tags ${{ github.sha }} 2>/dev/null || echo "")
           TAG_COUNT=$(echo $TAG | wc -w)
           if [ "$TAG_COUNT" -eq 0 ] ; then
-            RELEASE_VERSION=$INITIAL_VERSION
+            TAG=$INITIAL_VERSION
           fi
           RELEASE_VERSION="${TAG//v}"
           IFS='-' read -r BASE_VERSION PRERELEASE <<< "${RELEASE_VERSION}"
