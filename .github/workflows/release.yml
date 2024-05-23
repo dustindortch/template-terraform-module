@@ -1,5 +1,8 @@
 ---
 name: New Release
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 
 on:
   pull_request:
@@ -28,6 +31,7 @@ jobs:
       PR_URL: ${{ github.event.pull_request.html_url }}
       INITIAL_VERSION: 'v0.1.0'
     runs-on: ubuntu-latest
+    if: 
     steps:
       - id: checkout
         name: Checkout
@@ -40,7 +44,7 @@ jobs:
           LABEL_COUNT=$(echo $LABELS | wc -w)
           if [ "$LABEL_COUNT" -eq "1" ]; then
             echo "Found: $LABELS"
-            echo "RELEASE_TYPE=$LABELS" | tee -a $GITHUB_OUTPUT
+            echo "RELEASE_TYPE=$LABELS" | tee -a $GITHUB_ENV
           elif [ "$LABEL_COUNT" -gt "1"] ; then
             echo "::error::Too many release type labels: $(echo $LABELS | tr '\n' ' ')"
             exit 1
@@ -60,28 +64,28 @@ jobs:
           RELEASE_VERSION="${TAG//v}"
           IFS='-' read -r BASE_VERSION PRERELEASE <<< "${RELEASE_VERSION}"
           IFS='.' read -r MAJOR MINOR PATCH <<< "${BASE_VERSION}"
-          echo "MAJOR=${MAJOR}" | tee -a "$GITHUB_OUTPUT"
-          echo "MINOR=${MINOR}" | tee -a "$GITHUB_OUTPUT"
-          echo "PATCH=${PATCH}" | tee -a "$GITHUB_OUTPUT"
-          echo "RC=${PRERELEASE//rc}" | tee -a "$GITHUB_OUTPUT"
+          echo "MAJOR=${MAJOR}" | tee -a $GITHUB_ENV
+          echo "MINOR=${MINOR}" | tee -a $GITHUB_ENV
+          echo "PATCH=${PATCH}" | tee -a $GITHUB_ENV
+          echo "RC=${PRERELEASE//rc}" | tee -a $GITHUB_ENV
       
       - id: rev-major
         name: Rev Major Version
         if: steps.check-labels.outputs.RELEASE_TYPE == 'major'
         run: |
-          echo "MAJOR=$((${MAJOR}+1))" | tee -a "$GITHUB_OUTPUT"
+          echo "MAJOR=$((${MAJOR}+1))" | tee -a $GITHUB_ENV
 
       - id: rev-minor
         name: Rev Minor Version
         if: steps.check-labels.outputs.RELEASE_TYPE == 'minor'
         run: |
-          echo "MINOR=$((${MINOR}+1))" | tee -a "$GITHUB_OUTPUT"
+          echo "MINOR=$((${MINOR}+1))" | tee -a $GITHUB_ENV
 
       - id: rev-patch
         name: Rev Patch Version
         if: steps.check-labels.outputs.RELEASE_TYPE == 'patch'
         run: |
-          echo "PATCH=$((${PATCH}+1))" | tee -a "$GITHUB_OUTPUT"
+          echo "PATCH=$((${PATCH}+1))" | tee -a $GITHUB_ENV
 
       - id: rev-prelease
         name: Rev PRELEASE
@@ -90,16 +94,16 @@ jobs:
         if: ${{ contains(fromJSON('["rc", "beta", "alpha"]'),steps.check-labels.outputs.RELEASE_TYPE) }}
         run: |
           if [ "${PRE_RELEASE}" == "rc" ]; then
-            echo "PRERELEASE=rc$((${RC}+1))" | tee -a "$GITHUB_OUTPUT"
+            echo "PRERELEASE=rc$((${RC}+1))" | tee -a $GITHUB_ENV
           else
             DATE=$(date +%Y%m%d)
-            echo "PRERELEASE=${PRE_RELEASE}${DATE}" | tee -a "$GITHUB_OUTPUT"
+            echo "PRERELEASE=${PRE_RELEASE}${DATE}" | tee -a $GITHUB_ENV
           fi
 
       - id: build-version
         name: Build Version
         run: |
-          echo "VERSION=v${MAJOR}.${MINOR}.${PATCH}`[ -n "${PRERELEASE}" ] && echo "-${PRERELEASE}"`" | tee -a "$GITHUB_OUTPUT"
+          echo "VERSION=v${MAJOR}.${MINOR}.${PATCH}`[ -n "${PRERELEASE}" ] && echo "-${PRERELEASE}"`" | tee -a $GITHUB_ENV
 
       - id: create-tag
         name: Create Tag
