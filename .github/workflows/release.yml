@@ -1,0 +1,99 @@
+---
+name: New Release
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - opened
+      - reopened
+      - synchronize
+      - unlabeled
+  pull_request_target:
+    types: closed
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  detect:
+    name: Detect context
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token}}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      INITIAL_VERSION: 'v0.1.0'
+    runs-on: ubuntu-latest
+    steps:
+      - id: check-labels
+        name: Check labels
+        run: |
+          LABELS=$(gh pr view $PR_URL --json labels --jq '.labels[] | select((.name=="minor") or (.name=="major") or (.name=="patch") or (.name=="alpha") or (.name=="beta") or (.name=="rc") or (.name=="no-release")) | .name')
+          LABEL_COUNT=$(echo $LABELS | wc -w)
+          if [ "$LABEL_COUNT" -eq "1" ]; then
+            echo "Found: $LABELS"
+            echo "RELEASE_TYPE=$LABELS" | tee -a $GITHUB_OUTPUT
+          elif [ "$LABEL_COUNT" -gt "1"] ; then
+            echo "::error::Too many release type labels: $(echo $LABELS | tr '\n' ' ')"
+            exit 1
+          else
+            echo "::error::No release type labels found"
+            exit 2
+          fi
+
+      - id: get-version
+        name: Get Version
+        run: |
+          TAG=$(git describe --tags ${{ github.sha }})
+          TAG_COUNT=$(echo $TAG | wc -w)
+          if [ "$TAG_COUNT" -eq 0 ] ; then
+            RELEASE_VERSION=$INITIAL_VERSION
+          fi
+          RELEASE_VERSION="${TAG//v}"
+          IFS='-' read -r BASE_VERSION PRERELEASE <<< "${RELEASE_VERSION}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION}"
+          echo "MAJOR=${MAJOR}" | tee -a "$GITHUB_OUTPUT"
+          echo "MINOR=${MINOR}" | tee -a "$GITHUB_OUTPUT"
+          echo "PATCH=${PATCH}" | tee -a "$GITHUB_OUTPUT"
+          echo "RC=${PRERELEASE//rc}" | tee -a "$GITHUB_OUTPUT"
+      
+      - id: rev-major
+        name: Rev Major Version
+        if: steps.check-labels.outputs.RELEASE_TYPE == 'major'
+        run: |
+          echo "MAJOR=$((${MAJOR}+1))" | tee -a "$GITHUB_OUTPUT"
+
+      - id: rev-minor
+        name: Rev Minor Version
+        if: steps.check-labels.outputs.RELEASE_TYPE == 'minor'
+        run: |
+          echo "MINOR=$((${MINOR}+1))" | tee -a "$GITHUB_OUTPUT"
+
+      - id: rev-patch
+        name: Rev Patch Version
+        if: steps.check-labels.outputs.RELEASE_TYPE == 'patch'
+        run: |
+          echo "PATCH=$((${PATCH}+1))" | tee -a "$GITHUB_OUTPUT"
+
+      - id: rev-prelease
+        name: Rev PRELEASE
+        env:
+          PRE_RELEASE: ${{ steps.check-labels.outputs.name }}
+        if: ${{ contains(fromJSON('["rc", "beta", "alpha"]'),steps.check-labels.outputs.RELEASE_TYPE) }}
+        run: |
+          if [ "${PRE_RELEASE}" == "rc" ]; then
+            echo "PRERELEASE=rc$((${RC}+1))" | tee -a "$GITHUB_OUTPUT"
+          else
+            DATE=$(date +%Y%m%d)
+            echo "PRERELEASE=${PRE_RELEASE}${DATE}" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - id: create-release
+        name: Create Release
+        run: |
+          VERSION=$(echo "v${MAJOR}.${MINOR}.${PATCH}`[ -n "${PRERELEASE}" ] && echo "-${PRERELEASE}"`")
+          gh release create "$VERSION" --title "Release $VERSION" --notes "Release $VERSION" --target ${{ github.sha }}
+...

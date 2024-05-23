@@ -24,6 +24,21 @@ Modify the name within this README.md file to match the name of the module you a
 
 Update the code within the Terraform configuration files (`main.tf`, `variables.tf`, `outputs.tf`) to match the desired functionality of the module.  The files created represent the recommended files for any Terraform configuration code.
 
+## Establish variables/secrets for the repository
+
+The repository should have the following established if initial publishing is desired:
+
+TF_REGISTRY_ADDR: (variable) The address of the Terraform Registry (e.g. `registry.terraform.io` or `app.terraform.io`)
+TF_REGISTRY_TOKEN: (secret) The token for the Terraform Registry.  If publishing to HCP Terraform or Terraform Enterprise, this should be a team token with privileges to publish modules.
+
+## Branching Strategy
+
+The branching strategy for Terraform modules essentially follows 'Release Flow' and follows [Semantic Versioning 2.0](https://semver.org) practices:
+
+1. New features: create a feature branch (e.g. 'feature/<issue_number>-<description>') from `main` and merge back into `main` with a pull request and select the appropriate label for the change (i.e. "major", "minor", "alpha", "beta", "rc", or "no-release").
+2. Bug fixes: create a hotfix branch (e.g. 'hotfix/<issue_number>-<description>') from `main` and merge back into `main` with a pull request and select the appropriate label for the change (i.e. "patch").
+3. Releases: a release tag is created from `main` with the appropriate version number (e.g. `v1.0.0`) and are automatically published to the registry.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
